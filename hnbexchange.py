@@ -60,7 +60,12 @@ class HNBExtractor(object):
         return header
 
     def _validate_rates(self, rates):
-        ptrn = "\d{3}[A-Z]{3}\d{3}\s{7}[0-9]+,[0-9]+\s{7}[0-9]+,[0-9]+\s{7}[0-9]+,[0-9]+"
+        ptrn = (
+            "\d{3}[A-Z]{3}\d{3}\s{7}"
+            "[0-9]+,[0-9]+\s{7}"
+            "[0-9]+,[0-9]+\s{7}"
+            "[0-9]+,[0-9]+"
+        )
         for rate in rates:
             if not re.match(ptrn, rate):
                 raise ValueError('Invalid rate format %s', rate)
