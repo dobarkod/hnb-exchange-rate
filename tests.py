@@ -1,9 +1,12 @@
 import unittest
 import datetime
 from decimal import Decimal
-from mock import patch
-
 from hnbexchange import RateFrame, HNBExtractor
+
+try:
+    from mock import patch
+except ImportError:
+    from unittest.mock import patch
 
 
 sample_raw_data = """147300720133107201313

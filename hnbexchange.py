@@ -1,9 +1,14 @@
 import re
-import datetime
-from datetime import date, timedelta, datetime
-import requests
-from urlparse import urljoin
 from decimal import Decimal
+from datetime import date, timedelta, datetime
+
+import requests
+
+try:
+    from urlparse import urljoin
+except ImportError:
+    from urllib.parse import urljoin
+
 
 
 class RateFrame(object):
