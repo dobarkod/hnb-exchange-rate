@@ -10,7 +10,6 @@ except ImportError:
     from urllib.parse import urljoin
 
 
-
 class RateFrame(object):
     """Rate Frame holds exchange rate data for single point in time."""
 
