@@ -2,6 +2,8 @@
 
 Get exchange rate from Croatian National Bank (HNB).
 
+[![Build Status](https://travis-ci.org/dobarkod/hnb-exchange-rate.png)](https://travis-ci.org/dobarkod/hnb-exchange-rate)
+
 ## Quickstart
 
 Install the package from GitHub:
