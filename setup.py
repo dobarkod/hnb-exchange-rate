@@ -29,8 +29,7 @@ class CoverageCommand(BaseCommand):
     description = "run self-tests and report coverage (requires coverage.py)"
 
     def run(self):
-        os.chdir('testproject')
-        r = os.system('coverage run --source=restless manage.py test testapp')
+        r = os.system('coverage run --source=hnbexchange tests.py')
         if r != 0:
             sys.exit(-1)
         os.system('coverage html')
@@ -56,13 +55,13 @@ else:
     ]
 
 setup(
-    name='HNB Exchange Rate',
+    name='HNB-Exchange-Rate',
     version='0.0.1',
     author='Neven Mundar',
     author_email='neven.mundar@dobarkod.hr',
     description='HNB Exchange Rate retrieval and parsing',
     license='MIT',
-    url='github.com/dobarkod/hnb-exchange-rate',
+    url='https://github.com/dobarkod/hnb-exchange-rate/',
     classifiers=[
         "Development Status :: 1 - Alpha",
         "Environment :: Web Environment",
