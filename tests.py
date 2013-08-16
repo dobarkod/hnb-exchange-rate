@@ -22,7 +22,7 @@ sample_raw_data = """147300720133107201313
 826GBP001      10,613150       8,639067       8,664984
 840USD001       5,628279       5,645215       5,662151
 978EUR001       7,467601       7,490071       7,512541
-985PLN001       1,767438       1,772756       1,778074"""
+985PLN001     111,767438       1,772756       1,778074"""
 
 
 class TestHNBExtractor(unittest.TestCase):
@@ -46,6 +46,7 @@ class TestHNBExtractor(unittest.TestCase):
         self.assertEqual(rate['buying_rate'], Decimal('5.101517'))
         self.assertEqual(rate['median_rate'], Decimal('5.116868'))
         self.assertEqual(rate['selling_rate'], Decimal('5.132219'))
+        self.assertEqual(rates[12]['buying_rate'], Decimal('111.767438'))
 
     def test_insufficient_data(self):
         data = ""
