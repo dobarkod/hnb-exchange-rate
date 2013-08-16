@@ -9,6 +9,12 @@ try:
 except ImportError:
     from urllib.parse import urljoin
 
+RATE_FORMAT = re.compile(
+    "\d{3}([A-Z]{3})(\d{3})\s+"
+    "([0-9]+,[0-9]+)\s+"
+    "([0-9]+,[0-9]+)\s+"
+    "([0-9]+,[0-9]+)"
+)
 
 class RateFrame(object):
     """Rate Frame holds exchange rate data for single point in time."""
@@ -64,15 +70,9 @@ class HNBExtractor(object):
         return header
 
     def _validate_rates(self, rates):
-        ptrn = (
-            "\d{3}[A-Z]{3}\d{3}\s+"
-            "[0-9]+,[0-9]+\s+"
-            "[0-9]+,[0-9]+\s+"
-            "[0-9]+,[0-9]+"
-        )
         for rate in rates:
-            if not re.match(ptrn, rate):
-                raise ValueError('Invalid rate format %s', rate)
+            if not RATE_FORMAT.match(rate):
+                raise ValueError('Invalid rate format: ' + str(rate))
         return rates
 
     @property
@@ -92,10 +92,14 @@ class HNBExtractor(object):
         return [self._extract_rate(rate) for rate in self.raw_rates]
 
     def _extract_rate(self, line):
+        match = RATE_FORMAT.match(line)
+        assert match is not None
+
+        values = match.groups()
         return {
-            'currency_code': line[3:6],
-            'unit_value': int(re.sub("^0+", "", line[6:9])),
-            'buying_rate': Decimal(line[16:25].replace(",", ".")),
-            'median_rate': Decimal(line[31:39].replace(",", ".")),
-            'selling_rate': Decimal(line[46:55].replace(",", "."))
+            'currency_code': values[0],
+            'unit_value': int(values[1]),
+            'buying_rate': Decimal(values[2].replace(',', '.')),
+            'median_rate': Decimal(values[3].replace(',', '.')),
+            'selling_rate': Decimal(values[4].replace(',', '.'))
         }
