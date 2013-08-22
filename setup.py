@@ -56,7 +56,7 @@ else:
 
 setup(
     name='HNB-Exchange-Rate',
-    version='0.0.1',
+    version='0.0.2',
     author='Neven Mundar',
     author_email='neven.mundar@dobarkod.hr',
     description='HNB Exchange Rate retrieval and parsing',
