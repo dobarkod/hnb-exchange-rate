@@ -5,10 +5,6 @@ from cStringIO import StringIO
 import zipfile
 import requests
 
-try:
-    from urlparse import urljoin
-except ImportError:
-    from urllib.parse import urljoin
 
 RATE_FORMAT = re.compile(
     "\d{3}([A-Z]{3})(\d{3})\s+"
