@@ -127,6 +127,14 @@ class TestRateFrame(unittest.TestCase):
     def setUp(self):
         self.ref_date = datetime.date(2013, 7, 30)
 
+    def test_init_date(self):
+        rf = RateFrame(self.ref_date)
+        self.assertEqual(rf.date, self.ref_date)
+
+        # If no date is specified, date will default to today.
+        rf = RateFrame()
+        self.assertEqual(rf.date, datetime.date.today())
+
     def test_retrieve_date_fallback(self):
         # we mock requests.get to test condition when data for requested date is
         # not available (404, r.ok==False). If that happens RateFrame object
