@@ -76,6 +76,12 @@ class RateFrame(object):
                 break
             self.date = self.date - timedelta(1)
 
+        if self.date.strftime('%d%m%Y') not in r.headers.get('Content-Disposition', ''):
+            raise ValueError(
+                'Did not retrieve the requested exchange rate for this '
+                'date: %s.' % self.date.strftime('%d-%m-%Y')
+            )
+
         zf = zipfile.ZipFile(StringIO(r.content))
         text = zf.open(zf.namelist()[0]).read()
         self.data = HNBExtractor(text)

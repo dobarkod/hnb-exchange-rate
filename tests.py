@@ -120,6 +120,12 @@ class FakeRequest(object):
         if date == '30.07.2013.':
             self.ok = True
             self.text = sample_raw_data
+            self.headers = {
+                'Content-Disposition': (
+                    'attachment; filename="DnevnaTecajnaLista_'
+                    '30072013-30072013.zip"'
+                )
+            }
             self.content = (
                 'PK\x03\x04\x14\x00\x08\x08\x08\x00\x15\xa9\x98J\x00\x00\x00'
                 '\x00\x00\x00\x00\x00\x00\x00\x00\x00(\x00\x00\x00DnevnaTecaj'
@@ -191,6 +197,31 @@ class TestRateFrame(unittest.TestCase):
             self.assertEqual(rate['unit_value'], 1)
             self.assertEqual(rate['buying_rate'], Decimal('7.478515 '))
 
+    @patch('hnbexchange.RateFrame._build_payload')
+    def test_wrong_exchange_rate(self, payload):
+        date = self.ref_date - datetime.timedelta(1)
+        payload.return_value = {
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_pageNum': '',
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateFromMin': '',
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateToMax': '',
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_yearMin': '',
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_yearMax': '',
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateMaxDatePicker': date.strftime('%d.%m.%Y.'),
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_vrstaReport': '1',
+            'year': '-1',
+            'yearLast': '-1',
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_month': '-1',
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateOn': date.strftime('%d.%m.%Y.'),
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateFrom': date.strftime('%d.%m.%Y.'),
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateTo': date.strftime('%d.%m.%Y.'),
+            '_izborValuta': '1',
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_vrstaTecaja': '-1',
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_datumVrsta': '2',
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_fileTypeForDownload': 'DAT',
+        }
+
+        rf = RateFrame(self.ref_date)
+        self.assertRaises(ValueError, rf.retrieve)
 
 if __name__ == '__main__':
     unittest.main()
