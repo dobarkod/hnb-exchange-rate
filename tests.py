@@ -127,11 +127,6 @@ class TestRateFrame(unittest.TestCase):
     def setUp(self):
         self.ref_date = datetime.date(2013, 7, 30)
 
-    def test_full_url(self):
-        rf = RateFrame(self.ref_date)
-        url = 'http://www.hnb.hr/tecajn/f300713.dat'
-        self.assertEqual(rf.full_url(self.ref_date), url)
-
     def test_retrieve_date_fallback(self):
         # we mock requests.get to test condition when data for requested date is
         # not available (404, r.ok==False). If that happens RateFrame object
