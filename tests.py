@@ -113,10 +113,38 @@ class TestHNBExtractor(unittest.TestCase):
 
 class FakeRequest(object):
 
-    def __init__(self, url):
-        if url == 'http://www.hnb.hr/tecajn/f300713.dat':
+    def __init__(self, url, **kwargs):
+        date = kwargs[
+            'data']['_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateOn']
+
+        if date == '30.07.2013.':
             self.ok = True
             self.text = sample_raw_data
+            self.content = (
+                'PK\x03\x04\x14\x00\x08\x08\x08\x00\x15\xa9\x98J\x00\x00\x00'
+                '\x00\x00\x00\x00\x00\x00\x00\x00\x00(\x00\x00\x00DnevnaTecaj'
+                'naLista_30072013-30072013.dat]\x92In\xc2@\x10E\xf7\x96|\x87'
+                '\x1c\xc0\x8b\x9a\x87%a\x08\n\x11AAHI\xee\x7f\x90\x14B\xa1'
+                '\x0bzc=\xb7_w\x95\xeb\xa3\x18%8\x012\xc3\xed\x892O\xc0\xb6'
+                '\xbal\x00\xf0\xe5\xb6t!`\xe5\x86\x98\x189\x90%\xc4\xe7\tI'
+                '\xd6\xab\x07O<\xd3a`\x9a\xe8\xf0\x14)%\xe6\xa9N_\xff\x1e\x86'
+                '\x07\x0bEdv\xcc\xb0\x86U3\xe3\xd5\x8b\xcd\xa1y\xb8\x000\x1044'
+                '\xe0h\x98\xa06OU\xee\xfe\xb2C\xf8\xff\x90\xaa\x12$\xd5\x86'
+                '\x11\x88\x03\xc9\xd8\xaa?Nz?\xfd\x0cO\x17\xd7d\x19\r\xb9\x9by'
+                '\xc3\x94\xbar\x9e\xd4\xe3\xf8\xf9\xd0_*\x81FCI\xe2\x86\xeeQ'
+                '\xff\xc5\x95\xce\xdb\x07/\x1cT\xad!\xa3wTO\xbbz\xb6\xde\xef'
+                '\x86g\x0bX\xed\xd0\xc0\x10\x10\xb9#\x02\xd1\xd5\x0b\xb2\xb7'
+                '\xd7\xd3\xf0b1\xab+h`\x8d\x0b\xed\x8e\x15\x98\x04(O\xe0r~\x98'
+                '\xbbQ\x88\xe8@Q\x8e\xb6kTu\xcfS\x1a|o\xbe\x86\xf7\xb4b\xd1JH'
+                '\xc8\xd3\xeb\xf2<\xb6\x97\xe6y\xe5,\x14\xf5\x8e\n\x08\x18\x03'
+                '\x89\x95*/\x19z\xfa8\xf6\xbc\xb8Upy\xa0s\xcd\xaca"\xea\x1fPK'
+                '\x07\x08\x17\x0f\xa2\x0b,\x01\x00\x00%\x03\x00\x00PK\x01\x02'
+                '\x14\x00\x14\x00\x08\x08\x08\x00\x15\xa9\x98J\x17\x0f\xa2'
+                '\x0b,\x01\x00\x00%\x03\x00\x00(\x00\x00\x00\x00\x00\x00\x00'
+                '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00DnevnaTecajnaLista_3'
+                '0072013-30072013.datPK\x05\x06\x00\x00\x00\x00\x01\x00\x01'
+                '\x00V\x00\x00\x00\x82\x01\x00\x00\x00\x00'
+            )
         else:
             self.ok = False
             self.text = ""
@@ -144,7 +172,7 @@ class TestRateFrame(unittest.TestCase):
 
         date = self.ref_date + datetime.timedelta(2)
         rf = RateFrame(date)
-        with patch('requests.get', FakeRequest):
+        with patch('requests.post', FakeRequest):
             rf.retrieve()
             rates = rf.data.rates
             rate = rates[0]
@@ -152,7 +180,7 @@ class TestRateFrame(unittest.TestCase):
             self.assertEqual(rf.date, self.ref_date)
             self.assertEqual(rate['currency_code'], 'AUD')
             self.assertEqual(rate['unit_value'], 1)
-            self.assertEqual(rate['buying_rate'], Decimal('5.101517'))
+            self.assertEqual(rate['buying_rate'], Decimal('5.203531'))
 
     def test_get_rate(self):
         rf = RateFrame(self.ref_date)
@@ -161,7 +189,7 @@ class TestRateFrame(unittest.TestCase):
             rate = rf.get_rate('EUR')
             self.assertEqual(rate['currency_code'], 'EUR')
             self.assertEqual(rate['unit_value'], 1)
-            self.assertEqual(rate['buying_rate'], Decimal('7.467601'))
+            self.assertEqual(rate['buying_rate'], Decimal('7.478515 '))
 
 
 if __name__ == '__main__':

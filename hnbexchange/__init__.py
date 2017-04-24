@@ -69,11 +69,12 @@ class RateFrame(object):
         If there is no data for a given date iterate backwards until success.
         Return reference to class instance for chaining."""
 
-        r = requests.post(self.BASE_URL, params=self.PARAMS,
-            data=self._build_payload(self.date))
-        while not r.ok:
-            date = date - timedelta(1)
-            r = requests.get(self.full_url(date))
+        while True:
+            r = requests.post(self.BASE_URL, params=self.PARAMS,
+                data=self._build_payload(self.date))
+            if r.ok:
+                break
+            self.date = self.date - timedelta(1)
 
         zf = zipfile.ZipFile(StringIO(r.content))
         text = zf.open(zf.namelist()[0]).read()
