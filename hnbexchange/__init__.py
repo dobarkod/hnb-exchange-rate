@@ -13,6 +13,14 @@ RATE_FORMAT = re.compile(
     "([0-9]+,[0-9]+)"
 )
 
+UOA_FORMAT = re.compile(
+    "\d{3}([A-Z]{3})(\d{3})\s+"
+    "([ ])"
+    "([0-9]+,[0-9]+)"
+    "([ ]{15})"
+)
+
+
 class RateFrame(object):
     """Rate Frame holds exchange rate data for single point in time."""
     BASE_URL = 'http://www.hnb.hr/web/guest/temeljne-funkcije/monetarna-politika/tecajna-lista/tecajna-lista'
@@ -99,7 +107,7 @@ class HNBExtractor(object):
 
     def _validate_rates(self, rates):
         for rate in rates:
-            if not RATE_FORMAT.match(rate):
+            if not RATE_FORMAT.match(rate) and not UOA_FORMAT.match(rate):
                 raise ValueError('Invalid rate format: ' + str(rate))
         return rates
 
@@ -121,9 +129,12 @@ class HNBExtractor(object):
 
     def _extract_rate(self, line):
         match = RATE_FORMAT.match(line)
+        if match is None:
+            match = UOA_FORMAT.match(line)
         assert match is not None
 
-        values = match.groups()
+        values = map(
+            lambda x: '0,000000' if x.isspace() else x, list(match.groups()))
         return {
             'currency_code': values[0],
             'unit_value': int(values[1]),

@@ -57,8 +57,58 @@ class TestHNBExtractor(unittest.TestCase):
         self.assertRaises(ValueError, HNBExtractor, data)
 
     def test_valid_header_but_invalid_rates(self):
+        # Generally incorrect rate format.
         data = """147300720133107201313\nxxx123xxx     1       2       3"""
         self.assertRaises(ValueError, HNBExtractor, data)
+
+        # Invalid rate format but valid unit of account format.
+        data = (
+            """147300720133107201313\r\n036AUD001       5,203531       """ +
+            """5,219189       5,234847\r\n960XDR001                      """ +
+            """8,551284               """
+        )
+        HNBExtractor(raw_data=data)
+
+        # Valid rate format
+        data = (
+            """147300720133107201313\r\n036AUD001       5,203531       """ +
+            """5,219189       5,234847"""
+        )
+        HNBExtractor(raw_data=data)
+
+    def test_extract_rate_rate_format(self):
+        # Invalid rate format.
+        rate_str = '036AUD001       5,203531       5,219189               '
+        self.assertRaises(AssertionError, self.extractor._extract_rate, rate_str)
+
+        # Valid rate format.
+        rate_str = '036AUD001       5,203531       5,219189       5,234847'
+        rate = self.extractor._extract_rate(rate_str)
+        expected_rate = {
+            'currency_code': 'AUD',
+            'unit_value': 1,
+            'buying_rate': Decimal('5.203531 '),
+            'median_rate': Decimal('5.219189'),
+            'selling_rate': Decimal('5.234847')
+        }
+        self.assertEqual(rate, expected_rate)
+
+    def test_extract_rate_uoa_format(self):
+        # Invalid uoa format.
+        rate_str = '036AUD001                      5,219189'
+        self.assertRaises(AssertionError, self.extractor._extract_rate, rate_str)
+
+        # Valid uoa format.
+        rate_str = '036AUD001                      5,219189               '
+        rate = self.extractor._extract_rate(rate_str)
+        expected_rate = {
+            'currency_code': 'AUD',
+            'unit_value': 1,
+            'buying_rate': Decimal('0.000000'),
+            'median_rate': Decimal('5.219189'),
+            'selling_rate': Decimal('0.000000')
+        }
+        self.assertEqual(rate, expected_rate)
 
 
 class FakeRequest(object):
