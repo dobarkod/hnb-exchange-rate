@@ -63,16 +63,16 @@ class TestHNBExtractor(unittest.TestCase):
 
         # Invalid rate format but valid unit of account format.
         data = (
-            """147300720133107201313\r\n036AUD001       5,203531       """ +
-            """5,219189       5,234847\r\n960XDR001                      """ +
-            """8,551284               """
+            '147300720133107201313\r\n036AUD001       5,203531       '
+            '5,219189       5,234847\r\n960XDR001                      '
+            '8,551284               '
         )
         HNBExtractor(raw_data=data)
 
         # Valid rate format
         data = (
-            """147300720133107201313\r\n036AUD001       5,203531       """ +
-            """5,219189       5,234847"""
+            '147300720133107201313\r\n036AUD001       5,203531       '
+            '5,219189       5,234847'
         )
         HNBExtractor(raw_data=data)
 
