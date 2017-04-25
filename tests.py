@@ -1,3 +1,4 @@
+import sys
 import unittest
 import datetime
 from decimal import Decimal
@@ -151,6 +152,8 @@ class FakeRequest(object):
                 '0072013-30072013.datPK\x05\x06\x00\x00\x00\x00\x01\x00\x01'
                 '\x00V\x00\x00\x00\x82\x01\x00\x00\x00\x00'
             )
+            if sys.version_info[0] == 3:
+                self.content = bytes(self.content, 'latin1')
         else:
             self.ok = False
             self.text = ""

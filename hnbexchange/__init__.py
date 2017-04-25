@@ -1,9 +1,13 @@
 import re
 from decimal import Decimal
 from datetime import date, timedelta, datetime
-from cStringIO import StringIO
 import zipfile
 import requests
+
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO, BytesIO
 
 
 RATE_FORMAT = re.compile(
@@ -82,8 +86,12 @@ class RateFrame(object):
                 'date: %s.' % self.date.strftime('%d-%m-%Y')
             )
 
-        zf = zipfile.ZipFile(StringIO(r.content))
-        text = zf.open(zf.namelist()[0]).read()
+        try:
+            zf = zipfile.ZipFile(StringIO(r.content))
+            text = zf.open(zf.namelist()[0]).read()
+        except TypeError:
+            zf = zipfile.ZipFile(BytesIO(r.content))
+            text = str(zf.open(zf.namelist()[0]).read(), 'utf-8')
         self.data = HNBExtractor(text)
         return self
 
@@ -140,8 +148,8 @@ class HNBExtractor(object):
             match = UOA_FORMAT.match(line)
         assert match is not None
 
-        values = map(
-            lambda x: '0,000000' if x.isspace() else x, list(match.groups()))
+        values = list(map(
+            lambda x: '0,000000' if x.isspace() else x, list(match.groups())))
         return {
             'currency_code': values[0],
             'unit_value': int(values[1]),
