@@ -193,12 +193,11 @@ class TestRateFrame(unittest.TestCase):
 
     def test_get_rate(self):
         rf = RateFrame(self.ref_date)
-        with patch('requests.get', FakeRequest):
-            rf.retrieve()
-            rate = rf.get_rate('EUR')
-            self.assertEqual(rate['currency_code'], 'EUR')
-            self.assertEqual(rate['unit_value'], 1)
-            self.assertEqual(rate['buying_rate'], Decimal('7.478515 '))
+        rf.retrieve()
+        rate = rf.get_rate('EUR')
+        self.assertEqual(rate['currency_code'], 'EUR')
+        self.assertEqual(rate['unit_value'], 1)
+        self.assertEqual(rate['buying_rate'], Decimal('7.478515 '))
 
     @patch('hnbexchange.RateFrame._build_payload')
     def test_wrong_exchange_rate(self, payload):
