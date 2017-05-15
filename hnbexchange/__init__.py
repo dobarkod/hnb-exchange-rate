@@ -1,14 +1,14 @@
 import re
 from decimal import Decimal
 from datetime import date, timedelta, datetime
-from cStringIO import StringIO
 import zipfile
 import requests
 
 try:
-    from urlparse import urljoin
+    from cStringIO import StringIO
 except ImportError:
-    from urllib.parse import urljoin
+    from io import StringIO, BytesIO
+
 
 RATE_FORMAT = re.compile(
     "\d{3}([A-Z]{3})(\d{3})\s+"
@@ -16,6 +16,14 @@ RATE_FORMAT = re.compile(
     "([0-9]+,[0-9]+)\s+"
     "([0-9]+,[0-9]+)"
 )
+
+UOA_FORMAT = re.compile(
+    "\d{3}([A-Z]{3})(\d{3})\s+"
+    "([ ])"
+    "([0-9]+,[0-9]+)"
+    "([ ]{15})"
+)
+
 
 class RateFrame(object):
     """Rate Frame holds exchange rate data for single point in time."""
@@ -45,14 +53,14 @@ class RateFrame(object):
             '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateToMax': '',
             '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_yearMin': '',
             '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_yearMax': '',
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateMaxDatePicker': dt.strftime('%d.%m.%Y'),
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateMaxDatePicker': dt.strftime('%d.%m.%Y.'),
             '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_vrstaReport': '1',
             'year': '-1',
             'yearLast': '-1',
             '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_month': '-1',
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateOn': dt.strftime('%d.%m.%Y'),
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateFrom': dt.strftime('%d.%m.%Y'),
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateTo': dt.strftime('%d.%m.%Y'),
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateOn': dt.strftime('%d.%m.%Y.'),
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateFrom': dt.strftime('%d.%m.%Y.'),
+            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateTo': dt.strftime('%d.%m.%Y.'),
             '_izborValuta': '1',
             '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_vrstaTecaja': '-1',
             '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_datumVrsta': '2',
@@ -65,14 +73,25 @@ class RateFrame(object):
         If there is no data for a given date iterate backwards until success.
         Return reference to class instance for chaining."""
 
-        r = requests.post(self.BASE_URL, params=self.PARAMS,
-            data=self._build_payload(self.date))
-        while not r.ok:
-            date = date - timedelta(1)
-            r = requests.get(self.full_url(date))
+        while True:
+            r = requests.post(self.BASE_URL, params=self.PARAMS,
+                data=self._build_payload(self.date))
+            if r.ok:
+                break
+            self.date = self.date - timedelta(1)
 
-        zf = zipfile.ZipFile(StringIO(r.content))
-        text = zf.open(zf.namelist()[0]).read()
+        if self.date.strftime('%d%m%Y') not in r.headers.get('Content-Disposition', ''):
+            raise ValueError(
+                'Did not retrieve the requested exchange rate for this '
+                'date: %s.' % self.date.strftime('%d-%m-%Y')
+            )
+
+        try:
+            zf = zipfile.ZipFile(StringIO(r.content))
+            text = zf.open(zf.namelist()[0]).read()
+        except TypeError:
+            zf = zipfile.ZipFile(BytesIO(r.content))
+            text = str(zf.open(zf.namelist()[0]).read(), 'utf-8')
         self.data = HNBExtractor(text)
         return self
 
@@ -103,7 +122,7 @@ class HNBExtractor(object):
 
     def _validate_rates(self, rates):
         for rate in rates:
-            if not RATE_FORMAT.match(rate):
+            if not RATE_FORMAT.match(rate) and not UOA_FORMAT.match(rate):
                 raise ValueError('Invalid rate format: ' + str(rate))
         return rates
 
@@ -125,9 +144,12 @@ class HNBExtractor(object):
 
     def _extract_rate(self, line):
         match = RATE_FORMAT.match(line)
+        if match is None:
+            match = UOA_FORMAT.match(line)
         assert match is not None
 
-        values = match.groups()
+        values = list(map(
+            lambda x: '0,000000' if x.isspace() else x, list(match.groups())))
         return {
             'currency_code': values[0],
             'unit_value': int(values[1]),
