@@ -1,8 +1,7 @@
 import re
 from decimal import Decimal
 from datetime import date, timedelta, datetime
-from cStringIO import StringIO
-import zipfile
+
 import requests
 
 try:
@@ -19,45 +18,16 @@ RATE_FORMAT = re.compile(
 
 class RateFrame(object):
     """Rate Frame holds exchange rate data for single point in time."""
-    BASE_URL = 'http://www.hnb.hr/web/guest/temeljne-funkcije/monetarna-politika/tecajna-lista/tecajna-lista'
-    PARAMS = {
-        'p_p_cacheability': 'cacheLevelPage',
-        'p_p_col_count': '2',
-        'p_p_col_id': 'column-2',
-        'p_p_id': 'tecajnalistacontroller_WAR_hnbtecajnalistaportlet',
-        'p_p_lifecycle': '2',
-        'p_p_mode': 'view',
-        'p_p_state': 'normal'
-    }
 
-    def __init__(self, dt=None):
-        if dt is None:
-            dt = date.today()
-
-        self.date = dt
+    def __init__(self, date=date.today(), base_url='http://www.hnb.hr/tecajn/'):
+        self.date = date
+        self.base_url = base_url
         self.data = None
 
-    @staticmethod
-    def _build_payload(dt):
-        return {
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_pageNum': '',
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateFromMin': '',
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateToMax': '',
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_yearMin': '',
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_yearMax': '',
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateMaxDatePicker': dt.strftime('%d.%m.%Y'),
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_vrstaReport': '1',
-            'year': '-1',
-            'yearLast': '-1',
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_month': '-1',
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateOn': dt.strftime('%d.%m.%Y'),
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateFrom': dt.strftime('%d.%m.%Y'),
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_dateTo': dt.strftime('%d.%m.%Y'),
-            '_izborValuta': '1',
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_vrstaTecaja': '-1',
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_datumVrsta': '2',
-            '_tecajnalistacontroller_WAR_hnbtecajnalistaportlet_fileTypeForDownload': 'DAT',
-        }
+    def full_url(self, date):
+        """Return full url to exchange rate .dat file for a given date."""
+        filename = 'f' + date.strftime("%d%m%y") + '.dat'
+        return urljoin(self.base_url, filename)
 
     def retrieve(self):
         """Retrieve data for date that the class was initialised with.
@@ -65,15 +35,13 @@ class RateFrame(object):
         If there is no data for a given date iterate backwards until success.
         Return reference to class instance for chaining."""
 
-        r = requests.post(self.BASE_URL, params=self.PARAMS,
-            data=self._build_payload(self.date))
+        date = self.date
+        r = requests.get(self.full_url(date))
         while not r.ok:
             date = date - timedelta(1)
             r = requests.get(self.full_url(date))
-
-        zf = zipfile.ZipFile(StringIO(r.content))
-        text = zf.open(zf.namelist()[0]).read()
-        self.data = HNBExtractor(text)
+        self.date = date
+        self.data = HNBExtractor(r.text)
         return self
 
     def get_rate(self, currency_code):
